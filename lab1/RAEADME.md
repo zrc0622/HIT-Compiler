@@ -17,24 +17,7 @@
     ```
 
 # 结果
-1. 测试6未通过
-    ```
-    /*错误输出*/
-    Error type B at Line 3: Missing ";".
-    Error type B at Line 4: Missing ";".
-    Error type B at Line 4: Missing ";".
-    /*标准输出*/
-    Error type B at Line 3: Missing ";".
-    Error type B at Line 4: Missing ";".
-    ```
-2. 测试8未通过
-    ```
-    /*错误输出*/
-    Error type B at Line 3: Missing ";".
-    /*标准输出*/
-    Error type B at Line 3: Syntax error.
-    ```
-3. 测试10未通过
+1. 测试10未通过
     ```
     /*错误输出*/
     Error type B at Line 8: Missing ";".

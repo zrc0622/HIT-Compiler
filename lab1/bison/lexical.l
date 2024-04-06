@@ -15,6 +15,8 @@
         yycolumn += yyleng;
 
     int LexError = 0; // 词法错误数
+
+    void PrintError(int type, int lineno, char* error); // 输出错误: 错误的int和float
 %}
 
 DIGIT [0-9]
@@ -22,6 +24,11 @@ LETTER [a-zA-Z]
 DECIMAL 0|[1-9]{DIGIT}*
 OCTAL 0[0-7]+
 HEXADECIMAL (0x|0X)[0-9a-fA-F]+
+
+ERROR_OCTAL 0{DIGIT}*[89]{DIGIT}*
+ERROR_HEXADECIMAL (0x|0X)[0-9a-zA-Z]*[g-zG-Z][0-9a-zA-Z]*
+ERROR_INT {ERROR_OCTAL}|{ERROR_HEXADECIMAL}
+ERROR_FLOAT (\.{DIGIT}+|{DIGIT}+\.{DIGIT}+|{DIGIT}+\.)[eE]
 
 INT {DECIMAL}|{OCTAL}|{HEXADECIMAL}
 FLOAT ({DIGIT}+\.{DIGIT}+)|((\.{DIGIT}+|{DIGIT}+\.{DIGIT}+|{DIGIT}+\.)[eE]([+-]?{DIGIT}+))
@@ -83,6 +90,10 @@ LINE \n
 {LC} {yylval=MakeLeafNode("LC", LEX_OTHERS, yytext, yylineno); return LC;}
 {RC} {yylval=MakeLeafNode("RC", LEX_OTHERS, yytext, yylineno); return RC;}
 
+{ERROR_OCTAL} {yylval=MakeLeafNode("ERROR_INT", LEX_OTHERS, NULL, yylineno); PrintError(1, yylineno, yytext); LexError++; return INT;}
+{ERROR_HEXADECIMAL} {yylval=MakeLeafNode("ERROR_INT", LEX_OTHERS, NULL, yylineno); PrintError(2, yylineno, yytext); LexError++; return INT;}
+{ERROR_FLOAT} {yylval=MakeLeafNode("ERROR_FLOAT", LEX_OTHERS, NULL, yylineno); PrintError(3, yylineno, yytext); LexError++; return FLOAT;}
+
 "//" {for(char a=input(); a != '\n';) a=input();}
 "/*" {for(char a=input(), b=input(); a != '*' || b != '/';){a=b; b=input();}}
 {SPACE} {}
@@ -90,3 +101,12 @@ LINE \n
 . {printf("Error type A at Line %d: Mysterious characters \"%s\".\n", yylineno, yytext); LexError++;}
 
 %%
+void PrintError(int type, int lineno, char* error)
+{
+    switch(type)
+    {
+        case 1: printf("Error type A at Line %d: Illegal octal number \'%s\'.\n", lineno, error); break;
+        case 2: printf("Error type A at Line %d: Illegal hexadecimal number \'%s\'.\n", lineno, error); break;
+        case 3: printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", lineno, error); break;
+    }
+}

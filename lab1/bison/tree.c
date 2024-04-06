@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno) // 创建叶节点，void*可以是任何的指针
+Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno) // 创建叶节点
 {
     Node* leaf_node = (Node*)malloc(sizeof(Node));
     leaf_node->name = name;

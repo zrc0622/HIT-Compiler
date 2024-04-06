@@ -1,7 +1,7 @@
 int main(){
-	int i = 0
-	9;
-	int k =12;
-	
-	int j = 0x3G;
+	int i = 10;
+	int j = 010;
+	int k = 0x10;
+	float l = 1.24;
+	float m = 1.24E1;
 }
