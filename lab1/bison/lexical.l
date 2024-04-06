@@ -1,7 +1,11 @@
 %option yylineno
 
 %{
+    #include "tree.h"
+    #define YYSTYPE Node* // 定义yylval即终结符和非终结符的属性为Node*
+
     #include "syntax.tab.h" // 增加对语法中token定义的引用
+    
     /*用于维护语法单元的位置信息*/
     int yycolumn = 1; 
     #define YY_USER_ACTION \
@@ -9,6 +13,8 @@
         yylloc.first_column = yycolumn; \
         yylloc.last_column = yycolumn + yyleng - 1; \
         yycolumn += yyleng;
+
+    int LexError = 0; // 词法错误数
 %}
 
 DIGIT [0-9]
@@ -16,6 +22,7 @@ LETTER [a-zA-Z]
 DECIMAL 0|[1-9]{DIGIT}*
 OCTAL 0[0-7]+
 HEXADECIMAL (0x|0X)[0-9a-fA-F]+
+
 INT {DECIMAL}|{OCTAL}|{HEXADECIMAL}
 FLOAT ({DIGIT}+\.{DIGIT}+)|((\.{DIGIT}+|{DIGIT}+\.{DIGIT}+|{DIGIT}+\.)[eE]([+-]?{DIGIT}+))
 ID ({LETTER}|_)({DIGIT}|{LETTER}|_)*
@@ -48,36 +55,38 @@ SPACE [ \t]+
 LINE \n
 
 %%
+{TYPE} {yylval=MakeLeafNode("TYPE", LEX_TYPE, yytext, yylineno); return TYPE;}
+{STRUCT} {yylval=MakeLeafNode("STRUCT", LEX_OTHERS, yytext, yylineno); return STRUCT;}
+{RETURN} {yylval=MakeLeafNode("RETURN", LEX_OTHERS, yytext, yylineno); return RETURN;}
+{IF} {yylval=MakeLeafNode("IF", LEX_OTHERS, yytext, yylineno); return IF;}
+{ELSE} {yylval=MakeLeafNode("ELSE", LEX_OTHERS, yytext, yylineno); return ELSE;}
+{WHILE} {yylval=MakeLeafNode("WHILE", LEX_OTHERS, yytext, yylineno); return WHILE;}
+{INT} {yylval=MakeLeafNode("INT", LEX_INT, yytext, yylineno); return INT;}
+{FLOAT} {yylval=MakeLeafNode("FLOAT", LEX_FLOAT, yytext, yylineno); return FLOAT;}
+{ID} {yylval=MakeLeafNode("ID", LEX_ID, yytext, yylineno); return ID;}
+{SEMI} {yylval=MakeLeafNode("SEMI", LEX_OTHERS, yytext, yylineno); return SEMI;}
+{COMMA} {yylval=MakeLeafNode("COMMA", LEX_OTHERS, yytext, yylineno); return COMMA;}
+{ASSIGNOP} {yylval=MakeLeafNode("ASSIGNOP", LEX_OTHERS, yytext, yylineno); return ASSIGNOP;}
+{RELOP} {yylval=MakeLeafNode("RELOP", LEX_OTHERS, yytext, yylineno); return RELOP;}
+{PLUS} {yylval=MakeLeafNode("PLUS", LEX_OTHERS, yytext, yylineno); return PLUS;}
+{MINUS} {yylval=MakeLeafNode("MINUS", LEX_OTHERS, yytext, yylineno); return MINUS;}
+{STAR} {yylval=MakeLeafNode("STAR", LEX_OTHERS, yytext, yylineno); return STAR;}
+{DIV} {yylval=MakeLeafNode("DIV", LEX_OTHERS, yytext, yylineno); return DIV;}
+{AND} {yylval=MakeLeafNode("AND", LEX_OTHERS, yytext, yylineno); return AND;}
+{OR} {yylval=MakeLeafNode("OR", LEX_OTHERS, yytext, yylineno); return OR;}
+{DOT} {yylval=MakeLeafNode("DOT", LEX_OTHERS, yytext, yylineno); return DOT;}
+{NOT} {yylval=MakeLeafNode("NOT", LEX_OTHERS, yytext, yylineno); return NOT;}
+{LP} {yylval=MakeLeafNode("LP", LEX_OTHERS, yytext, yylineno); return LP;}
+{RP} {yylval=MakeLeafNode("RP", LEX_OTHERS, yytext, yylineno); return RP;}
+{LB} {yylval=MakeLeafNode("LB", LEX_OTHERS, yytext, yylineno); return LB;}
+{RB} {yylval=MakeLeafNode("RB", LEX_OTHERS, yytext, yylineno); return RB;}
+{LC} {yylval=MakeLeafNode("LC", LEX_OTHERS, yytext, yylineno); return LC;}
+{RC} {yylval=MakeLeafNode("RC", LEX_OTHERS, yytext, yylineno); return RC;}
 
-{TYPE} {return TYPE;}
-{STRUCT} {return STRUCT;}
-{RETURN} {return RETURN;}
-{IF} {return IF;}
-{ELSE} {return ELSE;}
-{WHILE} {return WHILE;}
-{INT} {return INT;}
-{FLOAT} {return FLOAT;}
-{ID} {return ID;}
-{SEMI} {return SEMI;}
-{COMMA} {return COMMA;}
-{ASSIGNOP} {return ASSIGNOP;}
-{RELOP} {return RELOP;}
-{PLUS} {return PLUS;}
-{MINUS} {return MINUS;}
-{STAR} {return STAR;}
-{DIV} {return DIV;}
-{AND} {return AND;}
-{OR} {return OR;}
-{DOT} {return DOT;}
-{NOT} {return NOT;}
-{LP} {return LP;}
-{RP} {return RP;}
-{LB} {return LB;}
-{RB} {return RB;}
-{LC} {return LC;}
-{RC} {return RC;}
+"//" {for(char a=input(); a != '\n';) a=input();}
+"/*" {for(char a=input(), b=input(); a != '*' || b != '/';){a=b; b=input();}}
 {SPACE} {}
 {LINE} {yycolumn = 1;}
-. {printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);}
+. {printf("Error type A at Line %d: Mysterious characters \"%s\".\n", yylineno, yytext); LexError++;}
 
 %%

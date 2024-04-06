@@ -1,1 +1,1 @@
-../bison/parser test5.cmm
+../bison/parser test1.cmm
