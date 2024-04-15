@@ -1,7 +1,5 @@
-int main(){
-	int i = 10;
-	int j = 010;
-	int k = 0x10;
-	float l = 1.24;
-	float m = 1.24E1;
+int main()
+{
+	int a[2[2];
+	int b
 }

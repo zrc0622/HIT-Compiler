@@ -33,6 +33,7 @@ ERROR_FLOAT (\.{DIGIT}+|{DIGIT}+\.{DIGIT}+|{DIGIT}+\.)[eE]
 INT {DECIMAL}|{OCTAL}|{HEXADECIMAL}
 FLOAT ({DIGIT}+\.{DIGIT}+)|((\.{DIGIT}+|{DIGIT}+\.{DIGIT}+|{DIGIT}+\.)[eE]([+-]?{DIGIT}+))
 ID ({LETTER}|_)({DIGIT}|{LETTER}|_)*
+ERROR_ID ({DIGIT})({DIGIT}|{LETTER}|_)*
 SEMI  ";" 
 COMMA  "," 
 ASSIGNOP  "=" 
@@ -93,6 +94,7 @@ LINE \n
 {ERROR_OCTAL} {yylval=MakeLeafNode("ERROR_INT", LEX_OTHERS, NULL, yylineno); PrintError(1, yylineno, yytext); LexError++; return INT;}
 {ERROR_HEXADECIMAL} {yylval=MakeLeafNode("ERROR_INT", LEX_OTHERS, NULL, yylineno); PrintError(2, yylineno, yytext); LexError++; return INT;}
 {ERROR_FLOAT} {yylval=MakeLeafNode("ERROR_FLOAT", LEX_OTHERS, NULL, yylineno); PrintError(3, yylineno, yytext); LexError++; return FLOAT;}
+{ERROR_ID} {yylval=MakeLeafNode("ERROR_ID", LEX_OTHERS, NULL, yylineno); PrintError(4, yylineno, yytext); LexError++; return ID;}
 
 "//" {for(char a=input(); a != '\n';) a=input();}
 "/*" {for(char a=input(), b=input(); a != '*' || b != '/';){a=b; b=input();}}
@@ -108,5 +110,6 @@ void PrintError(int type, int lineno, char* error)
         case 1: printf("Error type A at Line %d: Illegal octal number \'%s\'.\n", lineno, error); break;
         case 2: printf("Error type A at Line %d: Illegal hexadecimal number \'%s\'.\n", lineno, error); break;
         case 3: printf("Error type A at Line %d: Illegal floating point number \"%s\".\n", lineno, error); break;
+        case 4: printf("Error type A at Line %d: Invalid characters \"%s\".\n", lineno, error); break;
     }
 }

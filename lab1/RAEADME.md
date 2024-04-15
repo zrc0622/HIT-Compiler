@@ -7,17 +7,19 @@
 # 编译与测试
 1. 编译
     ```
-    cd bison
-    ./make.sh
+    ./bison/make.sh
     ```
 2. 测试
     ```
-    cd test
-    ./test_bison.sh
+    # 单次测试
+    ./test/test_bison.sh
+
+    # 测试所有
+    ./test/test_bison_all.sh
     ```
 
 # 结果
-1. 测试10未通过
+1. 测试10(选做6)的说明文字不同
     ```
     /*错误输出*/
     Error type B at Line 8: Missing ";".

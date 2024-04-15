@@ -6,8 +6,8 @@
 Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno) // 创建叶节点
 {
     Node* leaf_node = (Node*)malloc(sizeof(Node));
-    leaf_node->name = name;
-    leaf_node->type = type;
+    leaf_node->name = name; // token名
+    leaf_node->type = type; // 详细的属性值
     switch (type) {
         case LEX_INT:
             leaf_node->value.int_value = strtol(value, NULL, 0); // 强制类型转换后取值
@@ -19,9 +19,9 @@ Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno) // 创建
             if(value) strcpy(leaf_node->value.str_value, value); // 只有int和float不使用字符串，检测value防止段错误
             break;
     }
-    leaf_node->lineno = lineno;
+    leaf_node->lineno = lineno; // 行数，用于报错
     leaf_node->child_num = 0; // 叶节点没有孩子
-    leaf_node->children = NULL;
+    leaf_node->children = NULL; // 孩子节点，指针列表维护
     return leaf_node;
 }
 
