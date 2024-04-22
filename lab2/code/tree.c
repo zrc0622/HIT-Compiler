@@ -70,3 +70,22 @@ void PrintTree(Node* root, int depth) // 打印树，参数：根节点、深度
         PrintTree(root->children[i], depth+1);
     }
 }
+
+void FreeTree(Node* root) {
+    if (root == NULL) {
+        return; // 如果节点为空，直接返回
+    }
+    
+    // 递归删除所有子节点
+    for (int i = 0; i < root->child_num; i++) {
+        FreeTree(root->children[i]);
+    }
+    
+    // 如果节点是中间节点，还需要释放子节点指针数组的内存
+    if (root->children != NULL) {
+        free(root->children);
+    }
+
+    // 释放节点本身的内存
+    free(root);
+}

@@ -4,7 +4,7 @@ do
     echo "-------------------------------------------------"
     echo "test$i:"
     echo
-    ../bison/parser test$i.cmm
+    ../code/parser test$i.cmm
     echo "-------------------------------------------------"
     echo
 done

@@ -34,5 +34,6 @@ Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno); // 创�
 Node* MakeNode(char* name, NodeEnum type, char* value, int lineno, int child_num, Node** children); // 创建中间节点，输入归约产生式和孩子数
 void PrintIndentation(int depth); // 打印缩进的函数
 void PrintTree(Node* root, int depth); // 打印树，参数：根节点、深度
+void FreeTree(Node* root);
 
 #endif // TREE_H
