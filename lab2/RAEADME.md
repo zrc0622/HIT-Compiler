@@ -1,6 +1,10 @@
 # 文件结构
-|- bison: 使用bison进行语法分析。包含bison代码`syntax.y`(使用`bison -d syntax.y`编译)，主程序`main.c`(使用`gcc main.c syntax.tab.c -lfl -ly -o parser`编译)。也可以直接使用`./make.sh`进行编译
+|- code: 在词法分析和语法分析的基础上进行语义分析，可以直接使用`./make.sh`进行编译
     |- tree.c: 语法树构建代码
+    |- semantic.c: 语义分析相关的实现
+    |- syntax.y: 语法分析代码，使用bison实现，使用`bison -d syntax.y`编译
+    |- lexical.l: 词法分析代码，使用flex实现
+    |- main.c: 主程序，使用`gcc main.c syntax.tab.c -lfl -ly -o parser`编译
 |- test：测试文件
 
 # 编译与测试
