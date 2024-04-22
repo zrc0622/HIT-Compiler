@@ -7,6 +7,14 @@
     |- main.c: 主程序，使用`gcc main.c syntax.tab.c -lfl -ly -o parser`编译
 |- test：测试文件
 
+# 详细说明
+## 类型表示
+1. 每个值都会有一个类型 
+2. 用于表示基本类型（int、float）、数组及多维数组、结构体
+3. 具体见`semantic.h`中的`Type`
+4. 多维数组链表表示：![](./image/array.jpg)
+5. 结构体链表表示：![](./image/struct.jpg)
+
 # 编译与测试
 1. 编译
     ```

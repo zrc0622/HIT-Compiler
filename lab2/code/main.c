@@ -18,9 +18,9 @@ int main(int argc, char** argv)
     }
     yyrestart(f);
     yyparse();
-    // if(root != NULL && !LexError && !SynError){  // 输出语法分析树
-    //     PrintTree(root, 0);
-    // }
+    if(root != NULL && !LexError && !SynError){  // 输出语法分析树
+        PrintTree(root, 0);
+    }
 
     /*语义分析*/
     if(root != NULL && !LexError && !SynError){

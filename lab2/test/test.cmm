@@ -1,5 +1,9 @@
-int main()
+struct
 {
-    int i = 0;
-    j = i + 1;
-}
+    float x;
+};
+
+struct Position
+{
+    int y;
+};
