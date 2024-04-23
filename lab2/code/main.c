@@ -3,6 +3,7 @@
 #include "syntax.tab.h" // 词法分析和语法分析
 #include "semantic.h"   // 语义分析
 extern Node* root;
+extern CrossTable* symbol_table;
 extern int LexError;
 extern int SynError;
 extern int yyrestart(FILE* f);
@@ -18,12 +19,13 @@ int main(int argc, char** argv)
     }
     yyrestart(f);
     yyparse();
-    if(root != NULL && !LexError && !SynError){  // 输出语法分析树
-        PrintTree(root, 0);
-    }
+    // if(root != NULL && !LexError && !SynError){  // 输出语法分析树
+    //     PrintTree(root, 0);
+    // }
 
     /*语义分析*/
     if(root != NULL && !LexError && !SynError){
+        symbol_table=init_cross_table();
         TraverseTree(root);
     }
 
