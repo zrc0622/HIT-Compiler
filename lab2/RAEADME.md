@@ -30,5 +30,15 @@
     ./test/test_bison_all.sh
     ```
 
+# 注意
+1. 结构体名称：定义结构体数据结构时给这个数据结构取的名称
+2. 变量名称：定义变量时给变量取的名称，包括整型变量名、浮点型变量名、*结构体变量名*等
+3. 以下为c--代码结构体的正确使用方式，其中`Position`是结构体名称，`my_position`和`your_position`是结构体变量名称，其中`your_position`用了匿名结构体
+```c
+struct Position{int x; int y;};
+struct Position my_position;
+struct {int x; int y;} your_position;
+```
+
 # 结果
 1. 

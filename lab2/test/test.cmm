@@ -1,9 +1,15 @@
-struct
-{
-    float x;
-};
+/*error 17
+struct Position{int x; int y;};
+struct Position my_position;
+struct {int x; int y;} your_position;
 
-struct Position
-{
-    int y;
-};
+struct ErrorPosition a;
+*/
+
+/*error 16(1)
+struct Position{int x; int y;};
+struct Position my_position;
+struct {int x; int y;} your_position;
+
+struct Position{float c;};
+*/
