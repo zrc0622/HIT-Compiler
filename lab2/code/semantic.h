@@ -10,11 +10,11 @@
 // enum
 typedef enum Kind {BASIC, ARRAY, STRUCTURE, FUNCTION} Kind; // 类型表示：int、float，数组，结构体，函数
 typedef enum Basic {INT_TYPE, FLOAT_TYPE} Basic;
-typedef enum ErrorType {   // 错误类型
+typedef enum ErrorType {    // 错误类型
     UNDEF_VAR = 1,          // 未定义的变量
     UNDEF_FUNC,             // 未定义的函数
     REDEF_VAR,              // 变量重定义: 错误类型3
-    REDEF_FUNC,             // 函数重定义
+    REDEF_FUNC,             // 函数重定义：错误类型4
     TYPE_MISMATCH_ASSIGN,   // 分配时类型不匹配
     LEFT_VAR_ASSIGN,        // 赋值的左侧必须是变量
     TYPE_MISMATCH_OP,       // 操作数类型不匹配
@@ -25,7 +25,7 @@ typedef enum ErrorType {   // 错误类型
     NOT_A_INT,              // 变量不是整数
     ILLEGAL_USE_DOT,        // 非法使用“.”
     NONEXISTFIELD,          // 非存在的字段
-    REDEF_FEILD,            // 字段重定义
+    REDEF_FEILD,            // 字段重定义: 错误类型15
     DUPLICATED_NAME,        // 结构名重复: 错误类型16
     UNDEF_STRUCT            // 未定义的结构体: 错误类型17
 } ErrorType;
@@ -60,7 +60,9 @@ typedef struct Type // 类型：specifier type
         
         struct
         {
-            // TODO
+            int argc;   // 参数数量
+            FieldList* argv;    // 参数
+            Type* return_type;  // 返回值类型
         } function; // 函数      
     } u;
 } Type;
@@ -119,6 +121,7 @@ Type* copy_type(Type* src_type);
 HashItem* new_item(int scope_layer, FieldList* pfield);
 void free_item(HashItem* item);
 void add_item_to_table(HashItem* item, CrossTable* symbol_table);
+void delete_item_from_table(HashItem* item, CrossTable* table);
 FieldList* new_fieldlist(char* name, Type* type);
 void set_fieldlistname(FieldList* p, char* name);
 FieldList* copy_fieldlist(FieldList* src_fieldlist);
@@ -129,6 +132,9 @@ void add_item_to_hash(HashItem* item, HashTable* hash, int hash_bucket);
 Stack* new_stack();
 HashItem* get_stack_cur_head(Stack* stack);
 void add_item_to_stack(HashItem* item, Stack* stack);
+void add_stack_layer(Stack* stack);
+void sub_stack_layer(Stack* stack);
+void clear_now_layer(CrossTable* table);
 
 /*
 Ext: 外部
@@ -137,6 +143,10 @@ Tag: 结构体标签，即定义的结构体名称，可以用于声明其它结
 Dec: 声明
 Var: 变量（变量名），例如：a、a[5]
 Fun: 函数
+Stm: 操作语句，例如 a=a+b;
+
+Def:    int a, b[5], c=6;
+Dec:    a 或 b[5] 或 c=6
 */
 void TraverseTree(Node* node);
 void ExtDef(Node* node);
@@ -145,5 +155,13 @@ Type* StructSpecifier(Node* node);
 void ExtDecList(Node* node, Type* specifier_type);
 void FunDec(Node* node, Type* specifier_type);
 void CompSt(Node* node, Type* specifier_type);
+void StmList(Node* node, Type* return_type);
 void DefList(Node* node, HashItem* struct_item);
+void Def(Node* node, HashItem* item);
+void DecList(Node* node, Type* specifier_type, HashItem* item);
+void Dec(Node* node, Type* specifier_type, HashItem* item);
+Type* Exp(Node* node);
+void StmList(Node* node, Type* return_type);
 HashItem* VarDec(Node* node, Type* specifier_type);
+void VarList(Node* node, HashItem* item);
+FieldList* ParamDec(Node* node);

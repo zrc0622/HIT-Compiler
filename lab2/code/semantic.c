@@ -45,7 +45,7 @@ bool check_item_conflict(CrossTable* symbol_table, HashItem* item)
         if(!strcmp(temp_item->field->name, item->field->name))
         {
             if(temp_item->field->type->kind == STRUCTURE || item->field->type->kind == STRUCTURE) return true;  // 错误类型3（部分）、错误类型16：变量-结构体、结构体-变量、结构体-结构体 冲突
-            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（并完成要求2.2：检查之前定义的变量作用域和现在的是否相同）：变量-变量 冲突
+            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（并完成要求2.2：检查之前定义的变量作用域和现在的是否相同）、错误类型4：变量-变量、函数名-函数名 冲突
         }
         temp_item=temp_item->next_hash_item; // 遍历下一项
     }
@@ -96,7 +96,10 @@ Type* new_type(Kind kind, ...)  // 初始化节点类型
         ptype->u.structure.field = va_arg(vaList, FieldList*);
         break;
     case FUNCTION:
-        // TODO
+        va_start(vaList, kind);
+        ptype->u.function.argc = va_arg(vaList, int);
+        ptype->u.function.argv = va_arg(vaList, FieldList*);
+        ptype->u.function.return_type = va_arg(vaList, Type*);
         break;
     default:
         break;
@@ -184,6 +187,24 @@ void add_item_to_table(HashItem* item, CrossTable* symbol_table) // 将item插�
     add_item_to_hash(item, symbol_table->hash_table, hash_bucket);
 }
 
+void delete_item_from_table(HashItem* item, CrossTable* table)
+{
+    unsigned int hash_bucket = hash_pjw(item->field->name);
+    if(item == get_hash_head(table->hash_table, hash_bucket)) table->hash_table->hash_array[hash_bucket] = item->next_hash_item;
+    else
+    {
+        HashItem* now = get_hash_head(table->hash_table, hash_bucket);
+        HashItem* last = now;
+        while (now != item)
+        {
+            last = now;
+            now = now->next_hash_item;
+        }
+        last->next_hash_item = now->next_hash_item;
+    }
+    free_item(item);
+}
+
 FieldList* new_fieldlist(char* name, Type* type)
 {
     FieldList* p = (FieldList*)malloc(sizeof(FieldList));
@@ -266,6 +287,24 @@ void add_item_to_stack(HashItem* item, Stack* stack)    // 将item插入到stack
 {
     item->next_layer_item = get_stack_cur_head(stack);
     stack->stack_array[stack->stack_layer] = item;
+}
+
+void add_stack_layer(Stack* stack){stack->stack_layer++;}
+
+void sub_stack_layer(Stack* stack){stack->stack_layer--;}
+
+void clear_now_layer(CrossTable* table)
+{
+    Stack* stack = table->stack;
+    HashItem* item = get_stack_cur_head(stack);
+    while (item)
+    {
+        HashItem* delete_item = item;
+        item = item->next_layer_item;
+        delete_item_from_table(delete_item, symbol_table);
+    }
+    stack->stack_array[stack->stack_layer] = NULL;
+    sub_stack_layer(stack);
 }
 
 /*语义操作***************************************************************************/
@@ -408,19 +447,189 @@ void ExtDecList(Node* node, Type* specifier_type)   // 使用将声明类型继�
     
 }
 
+/*
+FunDec
+    ID LP VarList RP
+    ID LP RP
+*/
 void FunDec(Node* node, Type* specifier_type)
 {
-    // TODO
+    HashItem* item = new_item(symbol_table->stack->stack_layer, new_fieldlist(node->children[0]->value.str_value, new_type(FUNCTION, 0, NULL, copy_type(specifier_type))));
+
+    // FunDec->ID LP VarList RP
+    if(!strcmp(node->children[2]->name, "VarList")) VarList(node->children[2], item);
+
+    if(check_item_conflict(symbol_table, item)) // 错误类型4
+    {
+        char msg[100] = {0};
+        sprintf(msg, "Redefined function \"%s\".", item->field->name);
+        semantic_error(REDEF_FUNC, node->lineno, msg);
+        free_item(item);
+    }
+    else add_item_to_table(item, symbol_table);
 }
 
+/*
+CompSt
+    LC DefList StmList RC
+Def
+    Specifier DecList SEMI
+StmList
+    Stmt StmList
+    none
+*/
 void CompSt(Node* node, Type* specifier_type)
 {
-    // TODO
+    add_stack_layer(symbol_table->stack);
+    Node* deflist=node->children[1];    // DefList
+    Node* stmlist=node->children[2];    // StmList
+    if(deflist->type == SYN_NO_NULL)
+    {
+        DefList(deflist, NULL);
+    }
+    if (stmlist->type == SYN_NO_NULL)
+    {
+        StmList(stmlist, NULL);
+    }
+    clear_now_layer(symbol_table);
 }
 
-void DefList(Node* node, HashItem* struct_item)
+/*
+DefList
+    Def DefList
+    none            （第一次不会生成空，进入此函数时已经判断了）
+*/
+void DefList(Node* node, HashItem* item)    
 {
-    
+    while(node->type == SYN_NO_NULL)
+    {
+        Def(node->children[0], item);
+        node = node->children[1];
+    }  
+}
+
+/*
+Def
+    Specifier DecList SEMI      变量声明
+*/
+void Def(Node* node, HashItem* item)
+{
+    Type* specifier_type = Specifier(node->children[0]);
+    DecList(node->children[1], specifier_type, item);
+    free_type(specifier_type);
+}
+
+/*
+DecList
+    Dec
+    Dec COMMA DecList
+*/
+void DecList(Node* node, Type* specifier_type, HashItem* item)
+{
+    Node* temp = node;
+    while(temp)
+    {
+        Dec(temp->children[0], specifier_type, item);
+        if(temp->child_num>=3) temp = temp->children[2];
+        else break;
+    }
+}
+
+/*
+Dec
+    VarDec              不赋值
+    VarDec ASSIGNP Exp  赋值
+*/
+void Dec(Node* node, Type* specifier_type, HashItem* item)
+{
+    // Dec->VarDec
+    if(node->child_num<=1)
+    {
+        if(item != NULL)    // 只有定义结构体(函数内的结构体，非全局)时这里不为空
+        {
+            HashItem* vardec = VarDec(node->children[0], specifier_type);
+            FieldList* vardec_field = vardec->field;
+            FieldList* struct_field = item->field->type->u.structure.field;
+            FieldList* last = NULL;
+            while(struct_field != NULL) // 错误类型15，判断结构体内域名是否重复定义，不重复则退出循环插入该域名
+            {
+                if(!strcmp(vardec_field->name, struct_field->name))
+                {
+                    char msg[100]={0};
+                    sprintf(msg, "Redefined field \"%s\".", vardec_field->name);
+                    semantic_error(REDEF_FEILD, node->lineno, msg);
+                    free_item(vardec);
+                    return;
+                }
+                else
+                {
+                    last = struct_field;
+                    struct_field = struct_field->tail;
+                }
+            }
+            if(last == NULL) item->field->type->u.structure.field = copy_fieldlist(vardec_field);    // 首次直接插入
+            else last->tail = copy_fieldlist(vardec_field);
+            free_item(vardec);
+        }
+        else    // 非结构体的情况
+        {
+            HashItem* vardec = VarDec(node->children[0], specifier_type);
+            if(check_item_conflict(symbol_table, vardec))   // 错误类型3
+            {
+                char msg[100]={0};
+                sprintf(msg, "Redefined variable \"%s\".", vardec->field->name);
+                semantic_error(REDEF_VAR, node->lineno, msg);
+                free_item(vardec);
+            }
+            else
+            {
+                add_item_to_table(vardec, symbol_table);
+            }
+        }
+    }
+
+    // Dec->VarDec ASSIGNP Exp
+    else
+    {
+        if(item != NULL) semantic_error(REDEF_FEILD, node->lineno, "Illegal initialize variable in struct.");   // 错误类型15：结构体定义中赋值
+        else
+        {
+            // 判断赋值是否正确，如果正确则添加至符号表
+            HashItem* vardec = VarDec(node->children[0], specifier_type);
+            Type* exp_type = Exp(node->children[2]);
+        }
+    }
+}
+
+/*
+Exp
+    Exp ASSIGNOP Exp
+    Exp AND Exp
+    Exp OR Exp
+    Exp RELOP Exp
+    Exp PLUS Exp
+    Exp MINUS Exp
+    Exp STAR Exp
+    Exp DIV Exp
+    LP Exp RP
+    MINUS Exp
+    NOT Exp
+    ID LP Args RP
+    ID LP RP
+    Exp LB Exp RB
+    Exp DOT ID
+    ID
+    INT
+    FLOAT
+*/
+Type* Exp(Node* node)
+{
+
+}
+
+void StmList(Node* node, Type* return_type)
+{
+
 }
 
 /*
@@ -450,4 +659,65 @@ HashItem* VarDec(Node* node, Type* specifier_type)
         }
     }
     return item;
+}
+
+/*
+VarList
+    ParamDec COMMA VarList
+    ParamDec
+ParamDec
+    Specifier VarDec
+*/
+void VarList(Node* node, HashItem* item)
+{
+    add_stack_layer(symbol_table->stack);
+    int argc = 0;
+    Node* temp = node->children[0]; // ParamDec
+    FieldList* now = NULL;
+
+    // VarList->ParamDec(一个参数)
+    FieldList* paramdec = ParamDec(temp);
+    item->field->type->u.function.argv = copy_fieldlist(paramdec);
+    now = item->field->type->u.function.argv;
+    argc = 1;
+
+    // VarList->ParamDec COMMA VarList
+    while(node->child_num>=3)
+    {
+        node = node->children[2];   // VarList
+        temp = node->children[0];   // next ParamDec
+        paramdec = ParamDec(temp);
+        if(paramdec)
+        {
+            now->tail = copy_fieldlist(paramdec);
+            now = now->tail;
+            argc++;
+        }
+    }
+    item->field->type->u.function.argc = argc;
+    sub_stack_layer(symbol_table->stack);
+}
+
+/*
+ParamDec
+    Specifier VarDec
+*/
+FieldList* ParamDec(Node* node)
+{
+    Type* specifier_type = Specifier(node->children[0]);
+    HashItem* item = VarDec(node->children[1], specifier_type);
+    free_type(specifier_type);
+    if(check_item_conflict(symbol_table, item)) // 错误类型3
+    {
+        char msg[100] = {0};
+        sprintf(msg, "Redefined variable \"%s\".", item->field->name);
+        semantic_error(REDEF_VAR, node->lineno, msg);
+        free_item(item);
+        return NULL;
+    }
+    else
+    {
+        add_item_to_table(item, symbol_table);
+        return item->field;
+    }
 }

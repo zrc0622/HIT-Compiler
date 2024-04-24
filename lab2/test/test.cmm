@@ -22,4 +22,23 @@ int a;
 
 int Position;
 float a;
+
+int func(int b, int b){}
+*/
+
+
+/*error 4
+int func(int a){}
+int func(int a){}
+*/
+
+
+/*error 15+3
+int func(int a, int b)
+{
+    int c;
+
+    struct Position{int d; int d;} p;
+    int a;
+}
 */
