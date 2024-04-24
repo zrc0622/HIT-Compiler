@@ -45,7 +45,7 @@ bool check_item_conflict(CrossTable* symbol_table, HashItem* item)
         if(!strcmp(temp_item->field->name, item->field->name))
         {
             if(temp_item->field->type->kind == STRUCTURE || item->field->type->kind == STRUCTURE) return true;  // 错误类型3（部分）、错误类型16：变量-结构体、结构体-变量、结构体-结构体 冲突
-            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（要求2.2：检查之前定义的变量作用域和现在的是否相同）：变量-变量 冲突
+            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（并完成要求2.2：检查之前定义的变量作用域和现在的是否相同）：变量-变量 冲突
         }
         temp_item=temp_item->next_hash_item; // 遍历下一项
     }
@@ -306,19 +306,10 @@ Specifier
 */
 Type* Specifier(Node* node)
 {
-    Node* child_node = node->children[0];
-    if(!strcmp(child_node->name, "TYPE")){
-        switch (child_node->type)
-        {
-        case LEX_FLOAT:
-            return new_type(BASIC, FLOAT_TYPE);
-            break;
-        case LEX_INT:
-            return new_type(BASIC, INT_TYPE);
-            break;
-        default:
-            break;
-        }
+    Node* child_node = node->children[0];   
+    if(child_node->type == LEX_TYPE){// TYPE
+        if(!strcmp(child_node->value.str_value, "int")) return new_type(BASIC, INT_TYPE);
+        else return new_type(BASIC, FLOAT_TYPE);
     }
     else return StructSpecifier(child_node);
 }
@@ -391,9 +382,30 @@ Type* StructSpecifier(Node* node)
     return inherit_type;
 }
 
-void ExtDecList(Node* node, Type* specifier_type)
+/*
+ExtDecList
+    VarDec
+    VarDec COMMA ExtDecList
+*/
+void ExtDecList(Node* node, Type* specifier_type)   // 使用将声明类型继承给变量名
 {
-    // TODO
+    Node* temp = node;
+    while (temp)
+    {
+        HashItem* item = VarDec(temp->children[0], specifier_type);
+        if(check_item_conflict(symbol_table, item))
+        {
+            char msg[100] = {0};
+            sprintf(msg, "Redefined variable \"%s\".", item->field->name);  // 错误类型3
+            semantic_error(REDEF_VAR, temp->lineno, msg);
+            free_item(item);
+        }
+        else add_item_to_table(item, symbol_table);
+
+        if(temp->children[1]) temp = temp->children[2]; // 跳过逗号
+        else break;
+    }
+    
 }
 
 void FunDec(Node* node, Type* specifier_type)
@@ -409,4 +421,33 @@ void CompSt(Node* node, Type* specifier_type)
 void DefList(Node* node, HashItem* struct_item)
 {
     
+}
+
+/*
+VarDec
+    ID
+    VarDec LB INT RB
+*/
+HashItem* VarDec(Node* node, Type* specifier_type)
+{
+    Node* id = node;
+    while(id->child_num) id=id->children[0];    // 递归取出变量名
+    HashItem* item = new_item(symbol_table->stack->stack_layer, new_fieldlist(id->value.str_value, NULL));  // 为变量名创建空item
+
+    if(!strcmp(node->children[0]->name, "ID")) item->field->type = copy_type(specifier_type);   // VarDec->ID
+    else    // VarDec->VarDec LB INT RB
+    {
+        Node* vardec = node->children[0];
+        Node* array_int = node->children[2];
+        Type* temp_type = specifier_type;
+        while(true)
+        {
+            item->field->type = new_type(ARRAY, copy_type(temp_type), array_int->value.int_value);
+            if(vardec->child_num<=1) break; // 到ID了
+            array_int = vardec->children[2];
+            vardec = vardec->children[0];
+            temp_type = item->field->type;
+        }
+    }
+    return item;
 }

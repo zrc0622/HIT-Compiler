@@ -6,10 +6,20 @@ struct {int x; int y;} your_position;
 struct ErrorPosition a;
 */
 
-/*error 16(1)
+
+/*error 16
 struct Position{int x; int y;};
-struct Position my_position;
-struct {int x; int y;} your_position;
+int a;
 
 struct Position{float c;};
+struct a{float c;};
+*/
+
+
+/*error 3
+struct Position{int x; int y;};
+int a;
+
+int Position;
+float a;
 */

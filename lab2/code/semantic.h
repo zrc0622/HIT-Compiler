@@ -13,7 +13,7 @@ typedef enum Basic {INT_TYPE, FLOAT_TYPE} Basic;
 typedef enum ErrorType {   // 错误类型
     UNDEF_VAR = 1,          // 未定义的变量
     UNDEF_FUNC,             // 未定义的函数
-    REDEF_VAR,              // 变量重定义
+    REDEF_VAR,              // 变量重定义: 错误类型3
     REDEF_FUNC,             // 函数重定义
     TYPE_MISMATCH_ASSIGN,   // 分配时类型不匹配
     LEFT_VAR_ASSIGN,        // 赋值的左侧必须是变量
@@ -26,7 +26,7 @@ typedef enum ErrorType {   // 错误类型
     ILLEGAL_USE_DOT,        // 非法使用“.”
     NONEXISTFIELD,          // 非存在的字段
     REDEF_FEILD,            // 字段重定义
-    DUPLICATED_NAME,        // 名称重复: 错误类型3、16
+    DUPLICATED_NAME,        // 结构名重复: 错误类型16
     UNDEF_STRUCT            // 未定义的结构体: 错误类型17
 } ErrorType;
 
@@ -146,3 +146,4 @@ void ExtDecList(Node* node, Type* specifier_type);
 void FunDec(Node* node, Type* specifier_type);
 void CompSt(Node* node, Type* specifier_type);
 void DefList(Node* node, HashItem* struct_item);
+HashItem* VarDec(Node* node, Type* specifier_type);
