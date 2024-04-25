@@ -3,8 +3,7 @@ for ((i=1; i<=17; i++))
 do
     echo "-------------------------------------------------"
     echo "test$i:"
-    echo
-    ../code/parser test$i.cmm
+    ../bin/parser test$i.cmm
     echo "-------------------------------------------------"
     echo
 done

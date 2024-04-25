@@ -38,7 +38,44 @@ int func(int a, int b)
 {
     int c;
 
-    struct Position{int d; int d;} p;
-    int a;
+    struct Position{int d; int d;} p;   //15
+    int a;                              //3
 }
 */
+
+
+/*error 15+5+1+2+11+9
+int funa(int a){}
+
+int func(int a, int b)
+{
+    struct Position{int d=5;} p;    //15
+    int c = 5.5;                    //5
+    int d = e;                      //1
+    int f = print();                //2
+    int g = a();                    //11
+    int h = funa();                 //9
+}
+*/
+
+
+/*error 9
+int funa(int a, int b){}
+
+int func(int a, int b)
+{
+    int c = funa(1, 2, 3);  //9
+    int d = funa(1);        //9
+}
+*/
+
+struct Position
+{
+    float x, y;
+};
+
+int main()
+{
+    int i;
+    i.x;
+}

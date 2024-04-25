@@ -11,8 +11,8 @@
 typedef enum Kind {BASIC, ARRAY, STRUCTURE, FUNCTION} Kind; // 类型表示：int、float，数组，结构体，函数
 typedef enum Basic {INT_TYPE, FLOAT_TYPE} Basic;
 typedef enum ErrorType {    // 错误类型
-    UNDEF_VAR = 1,          // 未定义的变量
-    UNDEF_FUNC,             // 未定义的函数
+    UNDEF_VAR = 1,          // 未定义的变量: 错误类型1
+    UNDEF_FUNC,             // 未定义的函数: 错误类型2
     REDEF_VAR,              // 变量重定义: 错误类型3
     REDEF_FUNC,             // 函数重定义：错误类型4
     TYPE_MISMATCH_ASSIGN,   // 分配时类型不匹配
@@ -147,6 +147,7 @@ Stm: 操作语句，例如 a=a+b;
 
 Def:    int a, b[5], c=6;
 Dec:    a 或 b[5] 或 c=6
+Stmt:   语句列表
 */
 void TraverseTree(Node* node);
 void ExtDef(Node* node);
@@ -155,13 +156,14 @@ Type* StructSpecifier(Node* node);
 void ExtDecList(Node* node, Type* specifier_type);
 void FunDec(Node* node, Type* specifier_type);
 void CompSt(Node* node, Type* specifier_type);
-void StmList(Node* node, Type* return_type);
 void DefList(Node* node, HashItem* struct_item);
 void Def(Node* node, HashItem* item);
 void DecList(Node* node, Type* specifier_type, HashItem* item);
 void Dec(Node* node, Type* specifier_type, HashItem* item);
 Type* Exp(Node* node);
+void Args(Node* node, HashItem* item);
 void StmList(Node* node, Type* return_type);
+void Stmt(Node* node, Type* return_type);
 HashItem* VarDec(Node* node, Type* specifier_type);
 void VarList(Node* node, HashItem* item);
 FieldList* ParamDec(Node* node);
