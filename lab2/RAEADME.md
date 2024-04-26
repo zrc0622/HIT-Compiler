@@ -19,15 +19,18 @@
 # 编译与测试
 1. 编译
     ```
-    ./bison/make.sh
+    ./code/make.sh
     ```
 2. 测试
     ```
     # 单次测试
-    ./test/test_bison.sh
+    ./test/test_code.sh
 
-    # 测试所有
-    ./test/test_bison_all.sh
+    # 测试所有必做
+    ./test/test_code_re.sh
+    
+    # 测试所有选做
+    ./test/test_code_op.sh
     ```
 
 # 注意
@@ -41,4 +44,5 @@ struct {int x; int y;} your_position;
 ```
 
 # 结果
-1. 
+1. 正确通过了所有必做样例
+2. 完成要求2.2和2.3，并正确通过了选做样例3、4、5、6
