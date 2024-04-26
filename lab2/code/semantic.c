@@ -45,7 +45,7 @@ bool check_item_conflict(CrossTable* symbol_table, HashItem* item)
         if(!strcmp(temp_item->field->name, item->field->name))
         {
             if(temp_item->field->type->kind == STRUCTURE || item->field->type->kind == STRUCTURE) return true;  // 错误类型3（部分）、错误类型16：变量-结构体、结构体-变量、结构体-结构体 冲突
-            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（并完成要求2.2：检查之前定义的变量作用域和现在的是否相同）、错误类型4：变量-变量、函数名-函数名 冲突
+            if(temp_item->scope_layer == symbol_table->stack->stack_layer) return true; // 错误类型3（部分）（并完成要求2.2：检查变量的作用域，同作用域的才会冲突）、错误类型4：变量-变量、函数名-函数名 冲突
         }
         temp_item=temp_item->next_hash_item; // 遍历下一项
     }
@@ -193,8 +193,22 @@ bool check_type(Type* type1, Type* type2)   // 检查两个类型是否相等
                 return type1->u.basic == type2->u.basic;
             case ARRAY:
                 return check_type(type1->u.array.elem, type2->u.array.elem);
-            case STRUCTURE:
-                return !strcmp(type1->u.structure.name, type2->u.structure.name);
+            // case STRUCTURE:
+            //     return !strcmp(type1->u.structure.name, type2->u.structure.name);
+            case STRUCTURE: // 要求2.3: 名等价改为结构等价
+                FieldList* field1 = type1->u.structure.field;
+                FieldList* field2 = type2->u.structure.field;
+                while(field1 && field2)
+                {
+                    if(check_type(field1->type, field2->type)) 
+                    {
+                        field1=field1->tail;
+                        field2=field2->tail;
+                    }
+                    else return false;
+                }
+                if(field1 || field2) return false;
+                else return true;
         }
     }
 }
@@ -526,7 +540,7 @@ void CompSt(Node* node, Type* specifier_type)
     {
         StmList(stmlist, specifier_type); // 注意比较return的值
     }
-    clear_now_layer(symbol_table);
+    clear_now_layer(symbol_table);  // 要求2.2：维护stack，退出函数时清除当前作用域下定义的变量
 }
 
 /*
@@ -641,7 +655,7 @@ void Dec(Node* node, Type* specifier_type, HashItem* item)
             }
             else if(!check_type(vardec->field->type, exp_type))  // 错误类型5：赋值类型不符
             {
-                semantic_error(TYPE_MISMATCH_ASSIGN, node->lineno, "Type mismatchedfor assignment.");
+                semantic_error(TYPE_MISMATCH_ASSIGN, node->lineno, "Type mismatched for assignment.");
                 free_item(vardec);
             }
             else if(vardec->field->type && vardec->field->type->kind == ARRAY)   // 错误类型5：直接对数组赋值。TODO：确认这部分的作用

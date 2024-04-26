@@ -69,13 +69,20 @@ int func(int a, int b)
 }
 */
 
-struct Position
+struct Temp1
 {
-    float x, y;
+    int i;
+    float j;
+};
+
+struct Temp2
+{
+    int x;
 };
 
 int main()
 {
-    int i;
-    i.x;
+    struct Temp1 t1;
+    struct Temp2 t2;
+    t1 = t2;
 }
