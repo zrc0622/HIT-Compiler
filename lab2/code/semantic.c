@@ -54,7 +54,7 @@ bool check_item_conflict(CrossTable* symbol_table, HashItem* item)
 
 void semantic_error(ErrorType error_type, int line, char* msg)  // 错误信息输出
 {
-    printf("Error type %d at line %d: %s\n", error_type, line, msg);
+    printf("Error type %d at Line %d: %s\n", error_type, line, msg);
 }
 
 bool is_structure(HashItem* item)   // 判断是否是结构体的定义
@@ -145,6 +145,7 @@ void free_type(Type* specifier_type)
         specifier_type->u.function.argv = NULL;
         break;
     default:
+        printf("aa");
         // TODO: find error
         break;
     }
@@ -701,14 +702,14 @@ Type* Exp(Node* node)
                 // 左值检查
                 if(child1->children[0]->type == LEX_FLOAT || child1->children[0]->type == LEX_INT)
                 {
-                    semantic_error(LEFT_VAR_ASSIGN, child1->lineno, "The left-hand side of an assignment must be avaliable.");  // 错误类型6
+                    semantic_error(LEFT_VAR_ASSIGN, child1->lineno, "The left-hand side of an assignment must be variable.");  // 错误类型6
                 }
                 else if(!strcmp(child1->children[0]->name, "ID") || !strcmp(child1->children[1]->name, "LB") || !strcmp(child1->children[1]->name, "DOT"))  // 普通变量、数组、结构体
                 {
                     if(!check_type(p1, p2)) semantic_error(TYPE_MISMATCH_ASSIGN, child1->lineno, "Type mismatched for assignment.");    // 错误类型5
                     else return_type = copy_type(p1);
                 }
-                else semantic_error(LEFT_VAR_ASSIGN, child1->lineno, "The left-hand side of an assignment must be avaliable."); // 错误类型6
+                else semantic_error(LEFT_VAR_ASSIGN, child1->lineno, "The left-hand side of an assignment must be variable."); // 错误类型6
             }
             // Exp -> Exp AND Exp
             //        Exp OR Exp
@@ -747,7 +748,7 @@ Type* Exp(Node* node)
                 else if(!p2 || p2->kind != BASIC || p2->u.basic != INT_TYPE)    // 没用使用整数索引
                 {
                     char msg[100] = {0};
-                    sprintf(msg, "\"%s\" is not an integer.", child3->children[0]->value.str_value);    // 错误类型12
+                    sprintf(msg, "\"%.1f\" is not an integer.", child3->children[0]->value.float_value);    // 错误类型12
                     semantic_error(NOT_A_INT, child3->lineno, msg);
                 }
                 else return_type = copy_type(p1->u.array.elem);
@@ -764,7 +765,7 @@ Type* Exp(Node* node)
                 if(!p1 || p1->kind != STRUCTURE || !p1->u.structure.name)   // 非结构体使用.进行索引
                 {
                     semantic_error(ILLEGAL_USE_DOT, child1->lineno, "Illegal use of \".\".");    // 错误类型13
-                    if(p1) free_type(p1);
+                    // if(p1) free_type(p1);
                 }
                 else    // 处理域名，是否与定义的不同
                 {
@@ -775,7 +776,7 @@ Type* Exp(Node* node)
                         if(!strcmp(struct_field->name, struct_id->value.str_value)) break;
                         struct_field = struct_field->tail;
                     }
-                    if(struct_field == NULL) printf("Error type %d at Line %d: %s.\n", 14, child3->lineno, "NONEXISTFIELD");    // 错误类型14
+                    if(struct_field == NULL) printf("Error type %d at Line %d: Non-existent field \"%s\".\n", 14, child3->lineno, struct_id->value.str_value);    // 错误类型14
                     else return_type = copy_type(struct_field->type);
                 }
                 if(p1) free_type(p1);
@@ -809,7 +810,7 @@ Type* Exp(Node* node)
         else if(item->field->type->kind != FUNCTION)
         {
             char msg[100] = {0};
-            sprintf(msg, "\"%s\" is not a function.", child1->name);
+            sprintf(msg, "\"%s\" is not a function.", child1->value.str_value);
             semantic_error(NOT_A_FUNC, node->lineno, msg);  // 错误类型 11
             return NULL;
         }
@@ -863,13 +864,15 @@ void Args(Node* node, HashItem* item)
 {
     Node* temp = node;
     FieldList* argv = item->field->type->u.function.argv;   // 函数定义的参数
+    bool if_error = false;
     while(temp) // 将argv与函数定义的参数一一匹配
     {
         if(argv == NULL)    // 实际参数过多
         {
-            char msg[100] = {0};
-            sprintf(msg, "too many arguments to function \"%s\", except %d args.", item->field->name, item->field->type->u.function.argc);  // 错误类型9
-            semantic_error(FUNC_AGRC_MISMATCH, node->lineno, msg);
+            // char msg[100] = {0};
+            // sprintf(msg, "too many arguments to function \"%s\", except %d args.", item->field->name, item->field->type->u.function.argc);  // 错误类型9
+            // semantic_error(FUNC_AGRC_MISMATCH, node->lineno, msg);
+            if_error = true;
             break;
         }
         Type* real_type = Exp(temp->children[0]);   // 实际传入的参数
@@ -889,9 +892,39 @@ void Args(Node* node, HashItem* item)
     }
     if(argv != NULL)    // 实际参数过少
     {
-        char msg[100] = {0};
-        sprintf(msg, "too few argumetns to function \"%s\", except %d args.", item->field->name, item->field->type->u.function.argc);
-        semantic_error(FUNC_AGRC_MISMATCH, node->lineno, msg);  // 错误类型9
+        // char msg[100] = {0};
+        // sprintf(msg, "too few argumetns to function \"%s\", except %d args.", item->field->name, item->field->type->u.function.argc);
+        // semantic_error(FUNC_AGRC_MISMATCH, node->lineno, msg);  // 错误类型9
+        if_error=true;
+    }
+    if(if_error)
+    {
+        printf("Error type %d at Line %d: ", FUNC_AGRC_MISMATCH, node->lineno);
+        printf("Function \"%s(", item->field->name);
+        temp = node;
+        argv = item->field->type->u.function.argv;
+        while(argv) 
+        {
+            if(argv->type->u.basic == INT_TYPE) printf("int");
+            if(argv->type->u.basic == FLOAT_TYPE) printf("float");
+            argv = argv->tail;
+            if(argv) printf(", ");
+        }
+        printf(")\" is not applicable for arguments \"(");
+        while(temp)
+        {
+            Type* real_type = Exp(temp->children[0]);
+            if(real_type->u.basic == INT_TYPE) printf("int");
+            if(real_type->u.basic == FLOAT_TYPE) printf("float");
+            if(temp->child_num>=3)
+            {
+                temp = temp->children[2];
+                printf(", ");
+            }
+            else break;
+        }
+        printf(")\".\n");
+        
     }
 }
 
