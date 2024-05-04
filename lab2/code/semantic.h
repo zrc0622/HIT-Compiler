@@ -143,27 +143,28 @@ Tag: 结构体标签，即定义的结构体名称，可以用于声明其它结
 Dec: 声明
 Var: 变量（变量名），例如：a、a[5]
 Fun: 函数
-Stm: 操作语句，例如 a=a+b;
+Stmt: 操作语句，例如 a=a+b;
 
 Def:    int a, b[5], c=6;
 Dec:    a 或 b[5] 或 c=6
 Stmt:   语句列表
+
 */
 void TraverseTree(Node* node);
-void ExtDef(Node* node);
-Type* Specifier(Node* node);
+void ExtDef(Node* node);    // 外部定义
+Type* Specifier(Node* node);    // 说明符
 Type* StructSpecifier(Node* node);
-void ExtDecList(Node* node, Type* specifier_type);
-void FunDec(Node* node, Type* specifier_type);
-void CompSt(Node* node, Type* specifier_type);
-void DefList(Node* node, HashItem* struct_item);
-void Def(Node* node, HashItem* item);
-void DecList(Node* node, Type* specifier_type, HashItem* item);
-void Dec(Node* node, Type* specifier_type, HashItem* item);
-Type* Exp(Node* node);
-void Args(Node* node, HashItem* item);
-void StmList(Node* node, Type* return_type);
-void Stmt(Node* node, Type* return_type);
-HashItem* VarDec(Node* node, Type* specifier_type);
-void VarList(Node* node, HashItem* item);
-FieldList* ParamDec(Node* node);
+void ExtDecList(Node* node, Type* specifier_type);  // 外部声明列表
+void FunDec(Node* node, Type* specifier_type);  // 函数声明
+void CompSt(Node* node, Type* specifier_type);  // 复合语句：{}中的雨具
+void DefList(Node* node, HashItem* struct_item);    // 定义列表
+void Def(Node* node, HashItem* item);   // 定义
+void DecList(Node* node, Type* specifier_type, HashItem* item); // 声明列表
+void Dec(Node* node, Type* specifier_type, HashItem* item); // 声明
+Type* Exp(Node* node);  // 表达式
+void Args(Node* node, HashItem* item);  // 函数参数（使用函数）
+void StmList(Node* node, Type* return_type);    // 语句列表
+void Stmt(Node* node, Type* return_type);   // 语句
+HashItem* VarDec(Node* node, Type* specifier_type); // 变量声明
+void VarList(Node* node, HashItem* item);   // 变量列表（多个变量声明）
+FieldList* ParamDec(Node* node);    // 函数参数声明（声明函数）

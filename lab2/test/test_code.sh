@@ -1,2 +1,2 @@
 cd test
-../bin/parser test17.cmm
+../bin/parser test1.cmm
