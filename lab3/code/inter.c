@@ -442,7 +442,6 @@ pInterCodeList new_intercode_list(){
     pInterCodeList intercode_list = (pInterCodeList)malloc(sizeof(InterCodeList));
     intercode_list->head = NULL;
     intercode_list->cur = NULL;
-    // intercode_list->last_array_name = NULL;
     intercode_list->temp_var_num = 1;
     intercode_list->label_num = 1;
 }
@@ -978,7 +977,6 @@ void translate_Exp(pNode node, pOperand operand){
                     else target = base; // 结构体数组，基址就是地址
                     generate_intercode(IR_ADD, operand, target, offset);
                     operand->kind=OP_ADDRESS;
-                    // intercode_list->last_array_name = base->u.name;
                 }
             }
 
@@ -996,8 +994,6 @@ void translate_Exp(pNode node, pOperand operand){
                 pOperand id = new_operand(OP_VARIABLE, new_string(node->children[2]->value.str_value));
                 int offset = 0;
                 pItem item = search_item(symbol_table, temp->u.name);
-
-                // if(!item) item = search_item(symbol_table, intercode_list->last_array_name);
 
                 pFieldList temp2;
 

@@ -95,7 +95,6 @@ typedef struct InterCodeHead{   // 中间代码双向链表头
 typedef struct InterCodeList{   // 中间代码双向链表
     pInterCodeHead head;
     pInterCodeHead cur;
-    // char* last_array_name;  // 
     int temp_var_num;       // 临时变量的数量，用于给临时变量命名
     int label_num;          // 标签的数量，用于给标签命名
 } InterCodeList;
