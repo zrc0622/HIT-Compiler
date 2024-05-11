@@ -16,7 +16,8 @@ o1 := t9 + #0
 t11 := &op
 o2 := t11 + #4
 *o2 := #2
-ARG op
+t13 := &op
+ARG &t13
 t12 := CALL add
 n := t12
 WRITE n

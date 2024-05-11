@@ -7,7 +7,6 @@ RETURN n
 GOTO label3
 LABEL label2 :
 t3 := n - #1
-ARG t3
 t2 := CALL fact
 t1 := n * t2
 RETURN t1
@@ -18,7 +17,6 @@ m := t4
 IF m > #1 GOTO label4
 GOTO label5
 LABEL label4 :
-ARG m
 t5 := CALL fact
 result := t5
 GOTO label6

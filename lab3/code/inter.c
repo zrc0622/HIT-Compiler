@@ -16,6 +16,7 @@ pOperand new_operand(int kind, ...){
         
         case OP_VARIABLE:   // 变量、地址、标签、函数、关系运算符
         case OP_ADDRESS:
+        case OP_ADDRESS_STRUCT:
         case OP_LABEL:
         case OP_FUNCTION:
         case OP_RELOP:
@@ -33,6 +34,7 @@ void delete_operand(pOperand operand){
         
         case OP_VARIABLE:
         case OP_ADDRESS:
+        case OP_ADDRESS_STRUCT:
         case OP_LABEL:
         case OP_FUNCTION:
         case OP_RELOP:
@@ -56,6 +58,7 @@ void set_operand(pOperand operand, int kind, ...){
         
         case OP_VARIABLE:
         case OP_ADDRESS:
+        case OP_ADDRESS_STRUCT:
         case OP_LABEL:
         case OP_FUNCTION:
         case OP_RELOP:
@@ -79,6 +82,10 @@ void print_operand(FILE* fp, pOperand operand){
             case OP_RELOP:
                 printf("%s", operand->u.name);      // 其它直接打印
                 break;
+            
+            case OP_ADDRESS_STRUCT:
+                printf("&%s", operand->u.name);
+                break;
         }
     } 
     else{
@@ -92,6 +99,10 @@ void print_operand(FILE* fp, pOperand operand){
             case OP_FUNCTION:
             case OP_RELOP:
                 fprintf(fp, "%s", operand->u.name);
+                break;
+
+            case OP_ADDRESS_STRUCT:
+                fprintf(fp,"&%s", operand->u.name);
                 break;
         }
     }
@@ -431,7 +442,7 @@ pInterCodeList new_intercode_list(){
     pInterCodeList intercode_list = (pInterCodeList)malloc(sizeof(InterCodeList));
     intercode_list->head = NULL;
     intercode_list->cur = NULL;
-    intercode_list->last_array_name = NULL;
+    // intercode_list->last_array_name = NULL;
     intercode_list->temp_var_num = 1;
     intercode_list->label_num = 1;
 }
@@ -855,7 +866,7 @@ void translate_VarDec(pNode node, pOperand operand){
             }
         }
         else if(type->kind == STRUCTURE){
-            // 3.1
+            // 要求3.1，定义结构体空间
             generate_intercode(IR_DEC, new_operand(OP_VARIABLE, new_string(item->field->name)), get_type_size(type));
         }
     }
@@ -967,11 +978,11 @@ void translate_Exp(pNode node, pOperand operand){
                     else target = base; // 结构体数组，基址就是地址
                     generate_intercode(IR_ADD, operand, target, offset);
                     operand->kind=OP_ADDRESS;
-                    intercode_list->last_array_name = base->u.name;
+                    // intercode_list->last_array_name = base->u.name;
                 }
             }
 
-            // Exp -> Exp DOT ID
+            // Exp -> Exp DOT ID 要求3.1，访问结构体数据
             else{
                 pOperand temp = new_temp_var();
                 translate_Exp(node->children[0], temp);
@@ -986,7 +997,7 @@ void translate_Exp(pNode node, pOperand operand){
                 int offset = 0;
                 pItem item = search_item(symbol_table, temp->u.name);
 
-                if(!item) item = search_item(symbol_table, intercode_list->last_array_name);
+                // if(!item) item = search_item(symbol_table, intercode_list->last_array_name);
 
                 pFieldList temp2;
 
@@ -1032,12 +1043,12 @@ void translate_Exp(pNode node, pOperand operand){
             else{
                 pArg temp_arg = arg_list->head;
                 while(temp_arg){
-                    if(temp_arg->op == OP_VARIABLE){    // 结构体传地址
+                    if(temp_arg->op->kind == OP_VARIABLE){    // 结构体传地址
                         pItem item = search_item(symbol_table, temp_arg->op->u.name);
                         if (item && item->field->type->kind == STRUCTURE) {
                             pOperand temp_var = new_temp_var();
                             generate_intercode(IR_GET_ADDR, temp_var, temp_arg->op);
-                            pOperand temp_var_copy = new_operand(OP_ADDRESS, temp_var->u.name);
+                            pOperand temp_var_copy = new_operand(OP_ADDRESS_STRUCT, temp_var->u.name);  // 要求3.1，传参的时候传结构体指针的指针
                             generate_intercode(IR_ARG, temp_var_copy);
                         }
                     }
