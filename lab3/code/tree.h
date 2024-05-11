@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <string.h>
 #ifndef TREE_H
 #define TREE_H
+#include <stdio.h>
+#include <string.h>
 
 // // 儿子节点最大数量
 // const int MaxChildNum=10;
@@ -28,6 +28,8 @@ typedef struct Node{
     int child_num;
     struct Node** children; // 子节点数组（指针数组）
 } Node;
+
+extern Node* root;  // 声明根节点
 
 // 定义函数
 Node* MakeLeafNode(char* name, NodeEnum type, char* value, int lineno); // 创建叶节点，输入编号和词法值

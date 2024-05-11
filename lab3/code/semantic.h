@@ -1,3 +1,5 @@
+#ifndef SEMANTIC_H
+#define SEMANTIC_H
 #include "tree.h"
 #include <stdarg.h>
 #include <stdlib.h> 
@@ -72,6 +74,7 @@ typedef struct FieldList
     char* name;     // 域的名字
     Type* type;     // 域的类型
     FieldList* tail;    // 下一个域
+    bool is_arg;    // 实验3用到
 } FieldList;
 
 // Hash表项
@@ -104,6 +107,7 @@ typedef struct CrossTable
     int unnamed_struct;
 } CrossTable;
 
+extern CrossTable* symbol_table;    // 声明全局符号表
 
 /*函数声明*/
 char* new_string(const char* src);
@@ -150,13 +154,13 @@ Dec:    a 或 b[5] 或 c=6
 Stmt:   语句列表
 
 */
-void TraverseTree(Node* node);
+void traverse_tree_semantic_analyze(Node* node);
 void ExtDef(Node* node);    // 外部定义
 Type* Specifier(Node* node);    // 说明符
 Type* StructSpecifier(Node* node);
 void ExtDecList(Node* node, Type* specifier_type);  // 外部声明列表
 void FunDec(Node* node, Type* specifier_type);  // 函数声明
-void CompSt(Node* node, Type* specifier_type);  // 复合语句：{}中的雨具
+void CompSt(Node* node, Type* specifier_type);  // 复合语句：{}中的语句
 void DefList(Node* node, HashItem* struct_item);    // 定义列表
 void Def(Node* node, HashItem* item);   // 定义
 void DecList(Node* node, Type* specifier_type, HashItem* item); // 声明列表
@@ -168,3 +172,5 @@ void Stmt(Node* node, Type* return_type);   // 语句
 HashItem* VarDec(Node* node, Type* specifier_type); // 变量声明
 void VarList(Node* node, HashItem* item);   // 变量列表（多个变量声明）
 FieldList* ParamDec(Node* node);    // 函数参数声明（声明函数）
+
+#endif

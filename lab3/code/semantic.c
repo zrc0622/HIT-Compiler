@@ -1,6 +1,6 @@
 #include "semantic.h"
 
-CrossTable* symbol_table;   // 全局符号表，在main中初始化
+CrossTable* symbol_table;   // 定义全局符号表，在main中初始化
 
 /*功能函数***************************************************************************/
 char* new_string(const char* src)   // 创建一个字符串副本
@@ -70,7 +70,14 @@ CrossTable* init_cross_table()
     ptable->hash_table = new_hash_table();
     ptable->stack = new_stack();
     ptable->unnamed_struct = 0;
-    symbol_table=ptable;
+
+    // 实验3用到：添加read和write函数(提前把read和write插入符号表的最底层中，这样就不会出现未定义的情况了)
+    HashItem* read_function = new_item(0, new_fieldlist(new_string("read"), new_type(FUNCTION, 0, NULL, new_type(BASIC, INT_TYPE))));
+    HashItem* write_function = new_item(0, new_fieldlist(new_string("write"), new_type(FUNCTION, 1, new_fieldlist("arg1", new_type(BASIC, INT_TYPE)), new_type(BASIC, INT_TYPE))));
+    add_item_to_table(read_function, ptable);
+    add_item_to_table(write_function, ptable);
+
+    // symbol_table=ptable;
     return ptable;
 }
 
@@ -260,6 +267,7 @@ FieldList* new_fieldlist(char* name, Type* type)
     p->name = new_string(name); // dif
     p->type = type;
     p->tail = NULL;
+    p->is_arg = false;
     return p;
 }
 
@@ -358,13 +366,13 @@ void clear_now_layer(CrossTable* table)
 
 /*语义操作***************************************************************************/
 
-void TraverseTree(Node* node)   // 对语法树进行遍历，并提炼插入到符号表里
+void traverse_tree_semantic_analyze(Node* node)   // 对语法树进行遍历，并提炼插入到符号表里
 {
     if(!strcmp(node->name, "ExtDef")) ExtDef(node);
     // 递归处理子节点
     int child_num = node->child_num;
     for(int i=0; i<child_num; i++){
-        TraverseTree(node->children[i]);
+        traverse_tree_semantic_analyze(node->children[i]);
     }
 }
 
@@ -540,7 +548,7 @@ void CompSt(Node* node, Type* specifier_type)
     {
         StmList(stmlist, specifier_type); // 注意比较return的值
     }
-    clear_now_layer(symbol_table);  // 要求2.2：维护stack，退出函数时清除当前作用域下定义的变量
+    // clear_now_layer(symbol_table);  // 要求2.2：维护stack，退出函数时清除当前作用域下定义的变量
 }
 
 /*
@@ -1086,6 +1094,7 @@ FieldList* ParamDec(Node* node)
     }
     else
     {
+        item->field->is_arg = true;
         add_item_to_table(item, symbol_table);
         return item->field;
     }

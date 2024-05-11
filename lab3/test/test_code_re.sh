@@ -3,7 +3,7 @@ for ((i=1; i<=2; i++))
 do
     echo "------------------------------------------------------------"
     echo "test$i:"
-    ../bin/parser test$i.cmm
+    ../bin/parser test$i.cmm ../bin/out$i,ir
     echo "------------------------------------------------------------"
     echo
 done
